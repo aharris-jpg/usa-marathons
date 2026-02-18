@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>The Hardest Marathons in America Ranked | Action Network</title>
+  <meta name="description" content="Action Network ranked 25 U.S. marathons from hardest to easiest using course difficulty and historical finish outcomes, weighted 50/50." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
+  <style>
+    :root{
+      --bgTop:#162131;
+      --bgBottom:#0c1320;
+      --ink:#ffffff;
+
+      --card:rgba(255,255,255,0.07);
+      --border:rgba(255,255,255,0.14);
+      --shadow:0 18px 55px rgba(0,0,0,0.45);
+
+      --font: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      --mono: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+
+      --radius:18px;
+
+      /* Editorial marathon ramp (Hardest -> Easiest) */
+      --r0:#172554;
+      --r1:#1E3A8A;
+      --r2:#155E75;
+      --r3:#0E7490;
+      --r4:#14B8A6;
+      --r5:#CFFAE0;
+
+      --link:#7FE9FF;
+      --muted:rgba(255,255,255,0.78);
+      --muted2:rgba(255,255,255,0.68);
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--ink);
+      min-height:100vh;
+      padding:24px 14px 28px;
+      background:
+        radial-gradient(900px 520px at 76% 18%, rgba(20,184,166,0.14), transparent 56%),
+        radial-gradient(900px 520px at 20% 14%, rgba(127,233,255,0.10), transparent 56%),
+        radial-gradient(980px 640px at 55% 88%, rgba(255,255,255,0.05), transparent 60%),
+        linear-gradient(180deg, var(--bgTop), var(--bgBottom));
+      overflow-x:hidden;
+    }
+
+    .wrap{ max-width:980px; margin:0 auto; }
+
+    .hero{
+      text-align:center;
+      padding:8px 0 10px;
+      margin-bottom:10px;
+    }
+    .title{
+      margin:0;
+      font-weight:950;
+      letter-spacing:0.02em;
+      line-height:1.02;
+      font-size:clamp(32px, 5.4vw, 58px);
+      text-transform:uppercase;
+      background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(207,250,224,0.92));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      text-shadow:0 14px 54px rgba(20,184,166,0.10);
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(6px);
+    }
+
+    .map-area{ padding:14px; }
+
+    .map-frame{
+      position:relative;
+      background:rgba(0,0,0,0.10);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    svg{ width:100%; height:auto; display:block; }
+
+    .state-outline{
+      fill:none;
+      stroke:rgba(255,255,255,0.14);
+      stroke-width:0.9;
+      pointer-events:none;
+    }
+    .nation-outline{
+      fill:none;
+      stroke:rgba(255,255,255,0.18);
+      stroke-width:1.1;
+      pointer-events:none;
+    }
+
+    .legend{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      padding:10px 14px 6px;
+    }
+    .legend .label{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      color:rgba(255,255,255,0.82);
+      white-space:nowrap;
+    }
+    .legend .bar{
+      width:min(420px, 72vw);
+      height:14px;
+      border-radius:999px;
+      background:linear-gradient(90deg, var(--r0), var(--r1), var(--r2), var(--r3), var(--r4), var(--r5));
+      border:1px solid rgba(255,255,255,0.18);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
+    }
+
+    .map-note{
+      text-align:center;
+      padding: 0 14px 12px;
+      font-weight:850;
+      color: rgba(255,255,255,0.80);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    /* ===== Rank list: FIXED (no 3rd column cropping) ===== */
+    .rankgrid{
+      padding: 10px 14px 14px;
+      display:grid;
+      gap:12px;
+      grid-template-columns: 1fr;               /* mobile */
+    }
+    @media (min-width: 760px){
+      .rankgrid{ grid-template-columns: repeat(2, 1fr); } /* desktop: 2 cols only */
+    }
+
+    .rankcol{
+      background: rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 10px;
+      min-width: 0; /* prevents overflow clipping */
+    }
+    .rankrow{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:8px 8px;
+      border-bottom:1px dashed rgba(255,255,255,0.10);
+      font-size:13px;
+      line-height:1.15;
+      min-width: 0;
+    }
+    .rankrow:last-child{ border-bottom:none; }
+
+    .rleft{
+      font-weight:900;
+      color: rgba(255,255,255,0.92);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      min-width:0;
+    }
+    .rleft .num{
+      font-family: var(--mono);
+      font-weight: 950;
+      color: rgba(207,250,224,0.95);
+      margin-right:8px;
+      font-size: 14px;
+    }
+    .rright{
+      color: rgba(255,255,255,0.72);
+      font-weight: 800;
+      white-space:nowrap;
+      font-size: 12px;
+      flex: 0 0 auto;
+    }
+
+    /* Tooltip */
+    .tooltip{
+      position:absolute;
+      pointer-events:none;
+      display:none;
+      z-index:100;
+      background:rgba(12,18,30,0.92);
+      border:1px solid rgba(255,255,255,0.18);
+      border-radius:14px;
+      padding:10px 12px;
+      box-shadow:0 16px 40px rgba(0,0,0,0.45);
+      max-width:340px;
+      backdrop-filter: blur(8px);
+    }
+    .tooltip strong{
+      display:block;
+      font-weight:950;
+      margin-bottom:4px;
+      color:rgba(255,255,255,0.95);
+    }
+    .tooltip .muted{
+      margin-top:2px;
+      font-size:11px;
+      color:rgba(255,255,255,0.75);
+    }
+
+    /* Footer */
+    .footer{
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background:rgba(0,0,0,0.12);
+      border-top:1px solid rgba(255,255,255,0.10);
+    }
+    .source{
+      font-size:12px;
+      color:rgba(255,255,255,0.86);
+      font-weight:900;
+      letter-spacing:0.04em;
+      text-transform:uppercase;
+      white-space:nowrap;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .source a{
+      color:var(--link);
+      text-decoration:none;
+      border-bottom:1px dotted rgba(127,233,255,0.55);
+      font-weight:950;
+      text-transform:none;
+      letter-spacing:0;
+    }
+    .source .dim{ opacity:0.70; font-weight:900; letter-spacing:0.04em; text-transform:uppercase; }
+    .logo{
+      height:52px;
+      width:auto;
+      display:block;
+      filter: drop-shadow(0 12px 22px rgba(0,0,0,0.40));
+    }
+
+    .method{
+      padding:10px 14px 14px;
+      font-size:11px;
+      line-height:1.35;
+      color:rgba(255,255,255,0.72);
+      border-top:1px solid rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.08);
+    }
+    .method strong{ color:rgba(255,255,255,0.88); }
+
+    /* Leader lines for pins that get nudged by collision */
+    .leader{
+      stroke: rgba(255,255,255,0.55);
+      stroke-width: 1;
+      stroke-dasharray: 3 3;
+      opacity: 0.8;
+      pointer-events:none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1 class="title">The Hardest Marathons in America, Ranked</h1>
+    </div>
+
+    <div class="card">
+      <div class="map-area">
+        <div class="map-frame">
+          <svg id="map" viewBox="0 0 975 610" role="img" aria-label="U.S. map with marathon ranks"></svg>
+        </div>
+      </div>
+
+      <div class="legend" aria-label="Legend">
+        <div class="label">Hardest</div>
+        <div class="bar" aria-hidden="true"></div>
+        <div class="label">Easiest</div>
+      </div>
+
+      <div class="map-note">Ranked from hardest (1) to easiest (25)</div>
+
+      <div class="rankgrid" id="rankgrid" aria-label="Full 1–25 ranking list"></div>
+
+      <div class="footer">
+        <div class="source">
+          <span>Source:</span>
+          <a href="https://www.actionnetwork.com/" target="_blank" rel="noopener">Action Network</a>
+          <span class="dim">Data:</span>
+          <a href="https://www.goandrace.com/" target="_blank" rel="noopener">Go&amp;Race</a>
+          <a href="https://marathonguide.com/" target="_blank" rel="noopener">MarathonGuide</a>
+        </div>
+        <img class="logo" src="https://i.postimg.cc/rmmsKJPf/download.png" alt="Action Network logo" />
+      </div>
+
+      <div class="method">
+        <strong>Methodology:</strong> Action Network ranked 25 marathons using a combined finishability model: course difficulty + historical finish outcomes, weighted 50/50. Rankings are relative within this 25-race sample.
+      </div>
+    </div>
+  </div>
+
+  <div class="tooltip" id="tt"></div>
+
+  <script>
+    const photoURL = "https://www.womensrunning.co.uk/wp-content/uploads/2018/09/half-marathon-race.png";
+
+    // Rank is HARDEST (1) -> EASIEST (25)
+    const marathons = [
+      { rank:1,  name:"Honolulu Marathon", city:"Honolulu", state:"HI", lat:21.3069, lon:-157.8583 },
+      { rank:2,  name:"Kauai Marathon", city:"Kauai", state:"HI", lat:22.0964, lon:-159.5261 },
+      { rank:3,  name:"Los Angeles Marathon", city:"Los Angeles", state:"CA", lat:34.0522, lon:-118.2437 },
+      { rank:4,  name:"San Francisco Marathon", city:"San Francisco", state:"CA", lat:37.7749, lon:-122.4194 },
+      { rank:5,  name:"Maui Oceanfront Marathon", city:"Wailea", state:"HI", lat:20.6884, lon:-156.4400 },
+      { rank:6,  name:"Walt Disney World Marathon", city:"Orlando", state:"FL", lat:28.3852, lon:-81.5639 },
+      { rank:7,  name:"Anchorage Mayor’s Marathon", city:"Anchorage", state:"AK", lat:61.2181, lon:-149.9003 },
+      { rank:8,  name:"Flying Pig Marathon", city:"Cincinnati", state:"OH", lat:39.1031, lon:-84.5120 },
+      { rank:9,  name:"Rock ’n’ Roll San Diego Marathon", city:"San Diego", state:"CA", lat:32.7157, lon:-117.1611 },
+      { rank:10, name:"Marine Corps Marathon", city:"Dumfries", state:"VA", lat:38.5676, lon:-77.3280 },
+      { rank:11, name:"New York City Marathon", city:"New York City", state:"NY", lat:40.7128, lon:-74.0060 },
+      { rank:12, name:"Missoula Marathon", city:"Missoula", state:"MT", lat:46.8721, lon:-113.9940 },
+      { rank:13, name:"Big Sur International Marathon", city:"Big Sur", state:"CA", lat:36.2704, lon:-121.8081 },
+      { rank:14, name:"Grandma’s Marathon", city:"Duluth", state:"MN", lat:46.7867, lon:-92.1005 },
+      { rank:15, name:"Chicago Marathon", city:"Chicago", state:"IL", lat:41.8781, lon:-87.6298 },
+      { rank:16, name:"Twin Cities Marathon", city:"St. Paul", state:"MN", lat:44.9537, lon:-93.0900 },
+      { rank:17, name:"Seattle Marathon", city:"Seattle", state:"WA", lat:47.6062, lon:-122.3321 },
+      { rank:18, name:"Philadelphia Marathon", city:"Philadelphia", state:"PA", lat:39.9526, lon:-75.1652 },
+      { rank:19, name:"St. George Marathon", city:"St. George", state:"UT", lat:37.0965, lon:-113.5684 },
+      { rank:20, name:"Buffalo Marathon", city:"Buffalo", state:"NY", lat:42.8864, lon:-78.8784 },
+      { rank:21, name:"Detroit Free Press Marathon", city:"Detroit", state:"MI", lat:42.3314, lon:-83.0458 },
+      { rank:22, name:"Surf City Marathon", city:"Huntington Beach", state:"CA", lat:33.6595, lon:-117.9988 },
+      { rank:23, name:"Houston Marathon", city:"Houston", state:"TX", lat:29.7604, lon:-95.3698 },
+      { rank:24, name:"Boston Marathon", city:"Boston", state:"MA", lat:42.3601, lon:-71.0589 },
+      { rank:25, name:"California International Marathon", city:"Sacramento", state:"CA", lat:38.5816, lon:-121.4944 }
+    ];
+
+    // Pin ring gradient by rank
+    const ramp = ["#172554","#1E3A8A","#155E75","#0E7490","#14B8A6","#CFFAE0"];
+    const ringColor = d3.scaleQuantize().domain([1, 25]).range(ramp);
+
+    // Build rank list (2 columns desktop, 1 mobile)
+    const sorted = [...marathons].sort((a,b)=>a.rank-b.rank);
+    function buildColumns(){
+      const grid = document.getElementById("rankgrid");
+      grid.innerHTML = "";
+      const cols = window.innerWidth >= 760 ? 2 : 1;
+      const perCol = Math.ceil(sorted.length / cols);
+
+      for(let c=0;c<cols;c++){
+        const chunk = sorted.slice(c*perCol, (c+1)*perCol);
+        const col = document.createElement("div");
+        col.className = "rankcol";
+        col.innerHTML = chunk.map(d => `
+          <div class="rankrow">
+            <div class="rleft"><span class="num">${d.rank}</span>${d.name}</div>
+            <div class="rright">${d.city}, ${d.state}</div>
+          </div>
+        `).join("");
+        grid.appendChild(col);
+      }
+    }
+    buildColumns();
+    window.addEventListener("resize", buildColumns);
+
+    const svg = d3.select("#map");
+    const tooltip = d3.select("#tt");
+
+    const W = 975, H = 610;
+    const projection = d3.geoAlbersUsa().scale(1300).translate([W/2, H/2]);
+    const path = d3.geoPath(projection);
+
+    function esc(s){
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
+    function placeTooltip(event){
+      const rect = tooltip.node().getBoundingClientRect();
+      const pad = 10;
+      let x = event.pageX + 12;
+      let y = event.pageY + 12;
+      if (x + rect.width > window.innerWidth - pad) x = window.innerWidth - rect.width - pad;
+      if (y + rect.height > window.innerHeight - pad) y = window.innerHeight - rect.height - pad;
+      tooltip.style("left", x+"px").style("top", y+"px");
+    }
+    function showTip(event, d){
+      tooltip
+        .style("display","block")
+        .html(`<strong>#${d.rank} — ${esc(d.name)}</strong><div class="muted">${esc(d.city)}, ${esc(d.state)}</div>`);
+      placeTooltip(event);
+    }
+    function hideTip(){ tooltip.style("display","none"); }
+
+    d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(us => {
+      const states = topojson.feature(us, us.objects.states).features;
+      const nation = topojson.feature(us, us.objects.nation);
+
+      svg.attr("viewBox", `0 0 ${W} ${H}`);
+
+      const defs = svg.append("defs");
+
+      defs.append("clipPath")
+        .attr("id","clipUS")
+        .append("path")
+        .datum(nation)
+        .attr("d", path);
+
+      const filter = defs.append("filter")
+        .attr("id","pinShadow")
+        .attr("x","-50%").attr("y","-50%")
+        .attr("width","200%").attr("height","200%");
+      filter.append("feDropShadow")
+        .attr("dx",0).attr("dy",8)
+        .attr("stdDeviation",6)
+        .attr("flood-color","rgba(0,0,0,0.50)");
+
+      // Photo fill clipped to US
+      svg.append("image")
+        .attr("href", photoURL)
+        .attr("x",0).attr("y",0)
+        .attr("width",W).attr("height",H)
+        .attr("preserveAspectRatio","xMidYMid slice")
+        .attr("clip-path","url(#clipUS)")
+        .attr("opacity",0.58);
+
+      // Dark overlay clipped to US
+      svg.append("rect")
+        .attr("x",0).attr("y",0)
+        .attr("width",W).attr("height",H)
+        .attr("clip-path","url(#clipUS)")
+        .attr("fill","rgba(8,12,20,0.44)");
+
+      // Borders
+      svg.append("g")
+        .selectAll("path")
+        .data(states)
+        .join("path")
+        .attr("class","state-outline")
+        .attr("d", path);
+
+      svg.append("path")
+        .datum(nation)
+        .attr("class","nation-outline")
+        .attr("d", path);
+
+      // Initial projected points
+      const r = 15;               // core radius
+      const collideR = r + 10;    // collision radius (bigger than visible)
+      const pts = marathons.map(d => {
+        const p = projection([d.lon, d.lat]);
+        if(!p) return null;
+        return {
+          ...d,
+          x0: p[0], y0: p[1],   // original (true) position
+          x:  p[0], y:  p[1]    // simulated position
+        };
+      }).filter(Boolean);
+
+      // --- Collision simulation to prevent overlaps ---
+      // Gentle push-apart + spring back to original location
+      const sim = d3.forceSimulation(pts)
+        .force("x", d3.forceX(d => d.x0).strength(0.18))
+        .force("y", d3.forceY(d => d.y0).strength(0.18))
+        .force("collide", d3.forceCollide(collideR).iterations(2))
+        .stop();
+
+      // Run a fixed number of ticks for deterministic layout
+      for (let i=0; i<140; i++) sim.tick();
+
+      // Leader lines if a point moved meaningfully
+      const movedThreshold = 8;
+
+      const g = svg.append("g").attr("filter","url(#pinShadow)");
+
+      g.selectAll("line.leader")
+        .data(pts.filter(d => Math.hypot(d.x-d.x0, d.y-d.y0) > movedThreshold))
+        .join("line")
+        .attr("class","leader")
+        .attr("x1", d => d.x0)
+        .attr("y1", d => d.y0)
+        .attr("x2", d => d.x)
+        .attr("y2", d => d.y);
+
+      // Ring
+      g.selectAll("circle.ring")
+        .data(pts)
+        .join("circle")
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .attr("r", r + 4)
+        .attr("fill", d => ringColor(d.rank));
+
+      // Core
+      g.selectAll("circle.core")
+        .data(pts)
+        .join("circle")
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .attr("r", r)
+        .attr("fill", "rgba(255,255,255,0.97)")
+        .attr("stroke", "rgba(0,0,0,0.22)")
+        .attr("stroke-width", 1);
+
+      // Number
+      g.selectAll("text.rank")
+        .data(pts)
+        .join("text")
+        .attr("x", d => d.x)
+        .attr("y", d => d.y + 6)
+        .attr("text-anchor","middle")
+        .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace")
+        .attr("font-weight", 950)
+        .attr("font-size", 18)
+        .attr("fill", "rgba(11,16,32,0.95)")
+        .text(d => d.rank);
+
+      // Hit targets (bigger than pins, but invisible)
+      svg.append("g")
+        .selectAll("circle.hit")
+        .data(pts)
+        .join("circle")
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .attr("r", r + 14)
+        .attr("fill", "transparent")
+        .on("mousemove", (event,d) => showTip(event,d))
+        .on("mouseout", hideTip)
+        .on("click", (event,d) => { showTip(event,d); event.stopPropagation(); });
+
+      document.addEventListener("click", hideTip);
+      document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") hideTip(); });
+    });
+  </script>
+</body>
+</html>
