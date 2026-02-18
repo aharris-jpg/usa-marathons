@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --bgTop:#0b1624;
+  --bgBottom:#070d14;
+  --ink:#ffffff;
+  --border:rgba(255,255,255,0.12);
+  --line:rgba(255,255,255,0.10);
+  --accent:#6fe7ff;
+  --radius:18px;
+  --mono: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:
+    radial-gradient(800px 500px at 20% 20%, rgba(111,231,255,0.12), transparent 60%),
+    linear-gradient(180deg, var(--bgTop), var(--bgBottom));
+  padding:30px 14px;
+  color:white;
+}
+
+.wrap{ max-width:1200px; margin:0 auto; }
+
+.card{
+  position:relative;
+  border-radius:var(--radius);
+  overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:0 20px 55px rgba(0,0,0,0.6);
+}
+
+/* Marathon photo */
+.card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:url("https://d18hd77oyc05ov.cloudfront.net/eyJrZXkiOiIyMDI0LzA4L1BhcmlzLTIwMjQtbWVucy1tYXJhdGhvbi0yMDAweDExMDAtMS5wbmciLCJidWNrZXQiOiJlbmdsYW5kLWF0aGxldGljcy1wcm9kLXYyLWFzc2V0cy1idWNrZXQiLCJlZGl0cyI6eyJyZXNpemUiOnsid2lkdGgiOjE0NDB9fX0=") center/cover no-repeat;
+  opacity:0.65;
+  filter:blur(0.5px) saturate(1.05);
+}
+
+.card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(8,12,20,0.72);
+}
+
+.inner{
+  position:relative;
+  z-index:1;
+  padding:18px;
+}
+
+.kicker{
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  margin-bottom:14px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(0,0,0,0.2);
+  border-radius:14px;
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.table-wrap{
+  overflow:auto;
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:16px;
+  background:rgba(0,0,0,0.15);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+
+thead th{
+  background:rgba(0,0,0,0.45);
+  text-transform:uppercase;
+  font-size:11px;
+  letter-spacing:0.06em;
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,0.12);
+}
+
+tbody td{
+  padding:8px 10px;
+  border-bottom:1px solid var(--line);
+  white-space:nowrap;
+}
+
+tbody tr:hover td{
+  background:rgba(111,231,255,0.06);
+}
+
+.rank{
+  font-family:var(--mono);
+  font-weight:900;
+  color:var(--accent);
+}
+
+.mono{
+  font-family:var(--mono);
+  font-weight:900;
+}
+
+.score{
+  font-family:var(--mono);
+  font-weight:900;
+  color:#7FE9FF;
+}
+
+.footer{
+  margin-top:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.12);
+}
+
+.footer img{
+  height:48px;
+}
+
+.method{
+  font-size:11px;
+  margin-top:8px;
+  color:rgba(255,255,255,0.75);
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+<div class="card">
+<div class="inner">
+
+<div class="kicker">
+<div>Course, Finish Data & Feasibility Scores (Ranked Hardest to Easiest)</div>
+<div>Finish Feasibility Score (0–100)</div>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Marathon</th>
+<th>Location</th>
+<th>Total Ascent (m)</th>
+<th>Pace Impact</th>
+<th>Avg Finish</th>
+<th>Finish Spread</th>
+<th>Finish Feasibility</th>
+<th>Finishers</th>
+</tr>
+</thead>
+<tbody>
+
+<tr><td class="rank">1</td><td>Honolulu Marathon</td><td>Honolulu, HI</td><td class="mono">85</td><td>0.8% slower</td><td class="mono">06:17:36</td><td class="mono">01:43:57</td><td class="score">0.00</td><td class="mono">18,430</td></tr>
+<tr><td class="rank">2</td><td>Kauai Marathon</td><td>Kauai, HI</td><td class="mono">203</td><td>3.7% slower</td><td class="mono">04:59:48</td><td class="mono">01:10:02</td><td class="score">33.90</td><td class="mono">58</td></tr>
+<tr><td class="rank">3</td><td>Los Angeles Marathon</td><td>Los Angeles, CA</td><td class="mono">191</td><td>1.0% slower</td><td class="mono">05:18:31</td><td class="mono">01:14:49</td><td class="score">27.50</td><td class="mono">20,810</td></tr>
+<tr><td class="rank">4</td><td>San Francisco Marathon</td><td>San Francisco, CA</td><td class="mono">353</td><td>5.4% slower</td><td class="mono">04:31:50</td><td class="mono">00:49:24</td><td class="score">83.80</td><td class="mono">5,672</td></tr>
+<tr><td class="rank">5</td><td>Maui Oceanfront Marathon</td><td>Wailea, HI</td><td class="mono">149</td><td>1.7% slower</td><td class="mono">04:59:39</td><td class="mono">01:01:58</td><td class="score">54.80</td><td class="mono">299</td></tr>
+<tr><td class="rank">6</td><td>Walt Disney World Marathon</td><td>Orlando, FL</td><td class="mono">46</td><td>0.3% slower</td><td class="mono">05:52:29</td><td class="mono">01:04:39</td><td class="score">42.30</td><td class="mono">12,486</td></tr>
+<tr><td class="rank">7</td><td>Anchorage Mayor’s Marathon</td><td>Anchorage, AK</td><td class="mono">204</td><td>1.4% slower</td><td class="mono">04:43:14</td><td class="mono">01:01:18</td><td class="score">58.60</td><td class="mono">232</td></tr>
+<tr><td class="rank">8</td><td>Flying Pig Marathon</td><td>Cincinnati, OH</td><td class="mono">119</td><td>2.6% slower</td><td class="mono">04:32:46</td><td class="mono">00:55:40</td><td class="score">63.70</td><td class="mono">4,699</td></tr>
+<tr><td class="rank">9</td><td>Rock ’n’ Roll San Diego Marathon</td><td>San Diego, CA</td><td class="mono">182</td><td>0.9% slower</td><td class="mono">04:51:34</td><td class="mono">00:58:02</td><td class="score">58.50</td><td class="mono">5,936</td></tr>
+<tr><td class="rank">10</td><td>Marine Corps Marathon</td><td>Dumfries, VA</td><td class="mono">168</td><td>3.5% slower</td><td class="mono">04:36:39</td><td class="mono">00:52:00</td><td class="score">81.40</td><td class="mono">16,180</td></tr>
+<tr><td class="rank">11</td><td>New York City Marathon</td><td>New York, NY</td><td class="mono">95</td><td>0.8% slower</td><td class="mono">04:31:48</td><td class="mono">01:01:49</td><td class="score">60.70</td><td class="mono">55,527</td></tr>
+<tr><td class="rank">12</td><td>Missoula Marathon</td><td>Missoula, MT</td><td class="mono">102</td><td>0.5% slower</td><td class="mono">04:27:48</td><td class="mono">00:56:34</td><td class="score">64.20</td><td class="mono">1,153</td></tr>
+<tr><td class="rank">13</td><td>Big Sur International Marathon</td><td>Big Sur, CA</td><td class="mono">272</td><td>3.4% slower</td><td class="mono">04:31:24</td><td class="mono">00:45:51</td><td class="score">85.70</td><td class="mono">3,424</td></tr>
+<tr><td class="rank">14</td><td>Grandma’s Marathon</td><td>Duluth, MN</td><td class="mono">67</td><td>0.4% slower</td><td class="mono">04:20:12</td><td class="mono">00:58:08</td><td class="score">65.00</td><td class="mono">7,542</td></tr>
+<tr><td class="rank">15</td><td>Chicago Marathon</td><td>Chicago, IL</td><td class="mono">5</td><td>0.2% slower</td><td class="mono">04:21:56</td><td class="mono">01:02:57</td><td class="score">62.20</td><td class="mono">54,208</td></tr>
+<tr><td class="rank">16</td><td>Twin Cities Marathon</td><td>St. Paul, MN</td><td class="mono">131</td><td>1.2% slower</td><td class="mono">04:32:18</td><td class="mono">00:50:13</td><td class="score">83.30</td><td class="mono">7,006</td></tr>
+<tr><td class="rank">17</td><td>Seattle Marathon</td><td>Seattle, WA</td><td class="mono">178</td><td>1.6% slower</td><td class="mono">04:20:52</td><td class="mono">00:52:56</td><td class="score">84.20</td><td class="mono">2,470</td></tr>
+<tr><td class="rank">18</td><td>Philadelphia Marathon</td><td>Philadelphia, PA</td><td class="mono">123</td><td>1.1% slower</td><td class="mono">04:19:07</td><td class="mono">00:52:33</td><td class="score">84.80</td><td class="mono">12,377</td></tr>
+<tr><td class="rank">19</td><td>St. George Marathon</td><td>St. George, UT</td><td class="mono">76</td><td>5% faster</td><td class="mono">04:30:58</td><td class="mono">00:58:50</td><td class="score">62.40</td><td class="mono">3,889</td></tr>
+<tr><td class="rank">20</td><td>Buffalo Marathon</td><td>Buffalo, NY</td><td class="mono">144</td><td>1.4% slower</td><td class="mono">04:10:24</td><td class="mono">00:45:19</td><td class="score">90.40</td><td class="mono">1,209</td></tr>
+<tr><td class="rank">21</td><td>Detroit Free Press Marathon</td><td>Detroit, MI</td><td class="mono">25</td><td>Flat course</td><td class="mono">04:32:12</td><td class="mono">00:53:17</td><td class="score">81.70</td><td class="mono">3,657</td></tr>
+<tr><td class="rank">22</td><td>Surf City Marathon</td><td>Huntington Beach, CA</td><td class="mono">115</td><td>N/A</td><td class="mono">04:31:01</td><td class="mono">00:53:25</td><td class="score">81.90</td><td class="mono">1,571</td></tr>
+<tr><td class="rank">23</td><td>Houston Marathon</td><td>Houston, TX</td><td class="mono">40</td><td>0.1% slower</td><td class="mono">04:12:50</td><td class="mono">00:51:01</td><td class="score">86.90</td><td class="mono">7,562</td></tr>
+<tr><td class="rank">24</td><td>Boston Marathon</td><td>Boston, MA</td><td class="mono">166</td><td>0.7% slower</td><td class="mono">03:38:07</td><td class="mono">00:39:49</td><td class="score">100.00</td><td class="mono">27,163</td></tr>
+<tr><td class="rank">25</td><td>California International Marathon</td><td>Sacramento, CA</td><td class="mono">23</td><td>0.1% faster</td><td class="mono">03:51:36</td><td class="mono">00:52:40</td><td class="score">90.50</td><td class="mono">8,176</td></tr>
+
+</tbody>
+</table>
+</div>
+
+<div class="footer">
+<div><strong>Source:</strong> Action Network | Data: Go&Race, MarathonGuide</div>
+<img src="https://i.postimg.cc/rmmsKJPf/download.png" alt="Action Network logo">
+</div>
+
+<div class="method">
+<strong>Methodology:</strong> Action Network ranked 25 marathons using a combined finishability model (course difficulty + historical finish outcomes), weighted 50/50.
+</div>
+
+</div>
+</div>
+</div>
+</body>
+</html>
